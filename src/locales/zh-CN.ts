@@ -29,8 +29,8 @@ export default {
     stopResponding: '停止响应',
   },
   chat: {
-    newChatButton: '新建聊天',
-    newChatTitle: '新建聊天',
+    newChatButton: '创建新聊天',
+    newChatTitle: '创建新聊天',
     placeholder: '来说点什么吧...（Shift + Enter = 换行，"/" 触发提示词）',
     placeholderMobile: '来说点什么...',
     copy: '复制',
@@ -81,7 +81,7 @@ export default {
     stars: '如果你觉得此项目对你有帮助，请在 GitHub 上给我一个星星或者给予一点赞助，谢谢！',
   },
   store: {
-    siderButton: '提示词商店',
+    siderButton: '提示词',
     local: '本地',
     online: '在线',
     title: '标题',

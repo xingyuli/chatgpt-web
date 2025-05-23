@@ -81,7 +81,7 @@ export default {
     stars: '如果你覺得此專案對你有幫助，請在 GitHub 上給我一顆星，或者贊助我，謝謝！',
   },
   store: {
-    siderButton: '提示詞商店',
+    siderButton: '提示詞',
     local: '本機',
     online: '線上',
     title: '標題',

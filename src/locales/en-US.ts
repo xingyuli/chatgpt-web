@@ -81,7 +81,7 @@ export default {
     stars: 'If you find this project helpful, please give me a Star on GitHub or give a little sponsorship, thank you!',
   },
   store: {
-    siderButton: 'Prompt Store',
+    siderButton: 'Prompt',
     local: 'Local',
     online: 'Online',
     title: 'Title',

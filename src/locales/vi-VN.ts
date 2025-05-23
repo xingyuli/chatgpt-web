@@ -80,7 +80,7 @@ export default {
     stars: 'Nếu bạn thấy dự án này hữu ích, vui lòng cho tôi một Star trên GitHub hoặc tài trợ một chút, cảm ơn bạn!',
   },
   store: {
-    siderButton: 'Prompt Store',
+    siderButton: 'Prompt',
     local: 'Local',
     online: 'Online',
     title: 'Tiêu đề',
