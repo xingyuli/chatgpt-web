@@ -111,7 +111,7 @@ export function fetchChatAPIStream(
 
         // Process complete SSE events (delimited by double newline)
         const events = buffer.split('\n\n')
-        buffer = events.pop() // Keep incomplete event in buffer
+        buffer = events.pop()! // Keep incomplete event in buffer
 
         for (const event of events) {
           if (!event.trim())
