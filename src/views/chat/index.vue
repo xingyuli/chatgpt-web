@@ -13,12 +13,12 @@ import HeaderComponent from './components/Header/index.vue'
 import { HoverButton, SvgIcon } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useChatStore, usePromptStore } from '@/store'
-import { fetchChatAPIProcess } from '@/api'
+import { fetchChatAPIStream } from '@/api'
 import { t } from '@/locales'
 
-let controller = new AbortController()
+let controller: AbortController | null = new AbortController()
 
-const openLongReply = import.meta.env.VITE_GLOB_OPEN_LONG_REPLY === 'true'
+// const openLongReply = import.meta.env.VITE_GLOB_OPEN_LONG_REPLY === 'true'
 
 const route = useRoute()
 const dialog = useDialog()
@@ -57,7 +57,7 @@ function handleSubmit() {
 }
 
 async function onConversation() {
-  let message = prompt.value
+  const message = prompt.value
 
   if (loading.value)
     return
@@ -104,22 +104,15 @@ async function onConversation() {
   scrollToBottom()
 
   try {
-    let lastText = ''
+    const lastText = ''
     const fetchChatAPIOnce = async () => {
-      await fetchChatAPIProcess<Chat.ConversationResponse>({
+      await fetchChatAPIStream({
         prompt: message,
         options,
-        signal: controller.signal,
-        onDownloadProgress: ({ event }) => {
-          const xhr = event.target
-          const { responseText } = xhr
-          // Always process the final line
-          const lastIndex = responseText.lastIndexOf('\n', responseText.length - 2)
-          let chunk = responseText
-          if (lastIndex !== -1)
-            chunk = responseText.substring(lastIndex)
+        signal: controller!.signal,
+        onEvent: (event) => {
           try {
-            const data = JSON.parse(chunk)
+            const data = JSON.parse(event)
             updateChat(
               +uuid,
               dataSources.value.length - 1,
@@ -134,14 +127,11 @@ async function onConversation() {
               },
             )
 
-            if (openLongReply && data.detail.choices[0].finish_reason === 'length') {
-              options.parentMessageId = data.id
-              lastText = data.text
-              message = ''
-              return fetchChatAPIOnce()
-            }
-
             scrollToBottomIfAtBottom()
+
+            // all events reached
+            if (data.detail.choices[0].finish_reason === 'stop')
+              handleStop()
           }
           catch (error) {
             //
@@ -156,7 +146,8 @@ async function onConversation() {
   catch (error: any) {
     const errorMessage = error?.message ?? t('common.wrong')
 
-    if (error.message === 'canceled') {
+    // `BodyStreamBuffer was aborted` is triggered by `handleStop`
+    if (error.message === 'canceled' || error.message === 'BodyStreamBuffer was aborted') {
       updateChatSome(
         +uuid,
         dataSources.value.length - 1,
@@ -211,7 +202,7 @@ async function onRegenerate(index: number) {
 
   const { requestOptions } = dataSources.value[index]
 
-  let message = requestOptions?.prompt ?? ''
+  const message = requestOptions?.prompt ?? ''
 
   let options: Chat.ConversationRequest = {}
 
@@ -235,22 +226,15 @@ async function onRegenerate(index: number) {
   )
 
   try {
-    let lastText = ''
+    const lastText = ''
     const fetchChatAPIOnce = async () => {
-      await fetchChatAPIProcess<Chat.ConversationResponse>({
+      await fetchChatAPIStream({
         prompt: message,
         options,
-        signal: controller.signal,
-        onDownloadProgress: ({ event }) => {
-          const xhr = event.target
-          const { responseText } = xhr
-          // Always process the final line
-          const lastIndex = responseText.lastIndexOf('\n', responseText.length - 2)
-          let chunk = responseText
-          if (lastIndex !== -1)
-            chunk = responseText.substring(lastIndex)
+        signal: controller!.signal,
+        onEvent: (event) => {
           try {
-            const data = JSON.parse(chunk)
+            const data = JSON.parse(event)
             updateChat(
               +uuid,
               index,
@@ -265,24 +249,24 @@ async function onRegenerate(index: number) {
               },
             )
 
-            if (openLongReply && data.detail.choices[0].finish_reason === 'length') {
-              options.parentMessageId = data.id
-              lastText = data.text
-              message = ''
-              return fetchChatAPIOnce()
-            }
+            // all events reached
+            if (data.detail.choices[0].finish_reason === 'stop')
+              handleStop()
           }
           catch (error) {
             //
           }
         },
       })
+
       updateChatSome(+uuid, index, { loading: false })
     }
+
     await fetchChatAPIOnce()
   }
   catch (error: any) {
-    if (error.message === 'canceled') {
+    // `BodyStreamBuffer was aborted` is triggered by `handleStop`
+    if (error.message === 'canceled' || error.message === 'BodyStreamBuffer was aborted') {
       updateChatSome(
         +uuid,
         index,
@@ -399,7 +383,7 @@ function handleEnter(event: KeyboardEvent) {
 
 function handleStop() {
   if (loading.value) {
-    controller.abort()
+    controller!.abort()
     loading.value = false
   }
 }
@@ -455,7 +439,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (loading.value)
-    controller.abort()
+    controller!.abort()
 })
 </script>
 
